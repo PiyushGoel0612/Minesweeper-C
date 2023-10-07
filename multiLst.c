@@ -21,6 +21,21 @@ LIST* init(LIST* hd){
     return hd;
 }
 
+NODE* traverse_list(LIST* list, int x, int y){
+    if(x > 7 || y > 7){
+        return NULL;
+    }
+    LIST* temp = list;
+    for(int i=0; i<x; i++){
+        temp = temp->down;
+    }
+    NODE* slow = temp->head;
+    for(int j=0; j<y; j++){
+        slow = slow->next;
+    }
+    return slow;
+}
+
 LIST* addEnd(LIST* lst, int rw, int col, int m){
     if(rw == 0){
         NODE* p = (NODE*)malloc(sizeof(NODE));
@@ -74,19 +89,28 @@ LIST* addEnd(LIST* lst, int rw, int col, int m){
     return lst;
 }
 
-NODE* traverse_list(LIST* list, int x, int y){
-    if(x > 7 || y > 7){
-        return NULL;
+LIST* AssignNum(LIST* lst){
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j  < 8; j++){
+            NODE* n = traverse_list(lst,i,j);
+            if(n->num!=9){
+                int ngb[8][2] = {{i-1,j-1},{i-1,j},{i-1,j+1},
+                                {i,j-1},{i,j+1},
+                                {i+1,j-1},{i+1,j},{i+1,j+1}};
+                for(int k = 0; k < 8; k++){
+                    if(ngb[k][0] >= 0 && ngb[k][0] <= 7){
+                        if(ngb[k][1] >= 0 && ngb[k][1] <= 7){
+                            NODE* nb = traverse_list(lst,ngb[k][0],ngb[k][1]);
+                            if(nb->num == 9){
+                                n->num+=1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    LIST* temp = list;
-    for(int i=0; i<x; i++){
-        temp = temp->down;
-    }
-    NODE* slow = temp->head;
-    for(int j=0; j<y; j++){
-        slow = slow->next;
-    }
-    return slow;
+    return lst;
 }
 
 void display(LIST* lst){
@@ -97,7 +121,12 @@ void display(LIST* lst){
         NODE* node = temp1->head;
         printf("%d   ",x);
         while(node!= NULL){
-            printf("[%d] ", node->pressed);
+            if(node->pressed==1){
+                printf("[%d] ", node->num);
+            }
+            else{
+                printf("[ ] ");
+            }
             node = node->next;
         }
         printf("\n");
@@ -112,24 +141,48 @@ void display(LIST* lst){
     return;
 }
 
+LIST* Group(LIST* lst,int x,int y){
+    NODE* temp = traverse_list(lst,x,y);
+    if(temp->num != 0){
+        temp->pressed = 1;
+        return lst;
+    }
+    else{
+        int ngb[50][2] = {{x-1,y-1},{x-1,y},{x-1,y+1},
+                          {x,y-1},{x,y+1},
+                          {x+1,y-1},{x+1,y},{x+1,y+1}};
+        for(int k = 0; k < 8; k++){
+            if(ngb[k][0] >=0 && ngb[k][1] >=0 && ngb[k][0] <= 7 && ngb[k][1] <= 7){
+                NODE* n = traverse_list(lst,ngb[k][0],ngb[k][1]);
+                if(n->pressed != 1 && n->num !=9){
+                    n->pressed = 1;
+                    lst = Group(lst,ngb[k][0],ngb[k][1]);
+                }
+            }
+        }
+        return lst;
+    }
+}
+
 int main(){
     LIST* lst = malloc(sizeof(LIST));
     lst = init(lst);
 
     for(int i = 0; i < 8; i++){
         for(int j = 0; j < 8; j++){
-            lst = addEnd(lst,i,j,-1);      // list,row,col,value
+            lst = addEnd(lst,i,j,0);      // list,row,col,value
         }
     }
     display(lst);
-    printf("\n");
-    printf("Enter maadi : ");
+    printf("\n\n");
+    printf("Enter karo : ");
 
+    // Taking first input
     int xx,yy;
-    scanf("%d %d",&xx,&yy);
-    NODE* wee = traverse_list(lst,xx,yy);
-    wee->pressed = 1;
+    scanf("%d %d",&xx,&yy); 
+    NODE* wee;
 
+    // Placing Mines
     srand(time(NULL));
     int t = 0;
     while(t < 10){
@@ -141,12 +194,18 @@ int main(){
             t+=1;
         }
     }
+    lst = AssignNum(lst);
+
+    // checking for grouping
+    lst = Group(lst,xx,yy);
+    printf("\033[2J"); // ANSI escape code to clear the screen
+    printf("\033[H");  // ANSI escape code to move the cursor to the top left corner
     display(lst);
 
     t = 1;
     while(t!=0){
-        printf("\n");
-        printf("Enter maadi : ");
+        printf("\n\n");
+        printf("Enter karo : ");
         scanf("%d %d",&xx,&yy);
         wee = traverse_list(lst,xx,yy);
         if(wee == NULL){
@@ -163,8 +222,10 @@ int main(){
             continue;
         }
         else{
-            wee->pressed = 1;
+            lst = Group(lst,xx,yy);
         }
+        printf("\033[2J"); // ANSI escape code to clear the screen
+        printf("\033[H");  // ANSI escape code to move the cursor to the top left corner
         display(lst);
     }
 }
