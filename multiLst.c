@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
+#include<string.h>
 
 typedef struct Node{
     int num;
@@ -121,12 +122,16 @@ void display(LIST* lst){
         NODE* node = temp1->head;
         printf("%d   ",x);
         while(node!= NULL){
-            if(node->pressed==1){
+            if(node->pressed == 1){
                 printf("[%d] ", node->num);
+            }
+            else if(node->pressed == 2){
+                printf("[?] ");
             }
             else{
                 printf("[ ] ");
             }
+            // printf("[%d] ", node->pressed);
             node = node->next;
         }
         printf("\n");
@@ -148,6 +153,7 @@ LIST* Group(LIST* lst,int x,int y){
         return lst;
     }
     else{
+        temp->pressed = 1;
         int ngb[50][2] = {{x-1,y-1},{x-1,y},{x-1,y+1},
                           {x,y-1},{x,y+1},
                           {x+1,y-1},{x+1,y},{x+1,y+1}};
@@ -173,13 +179,20 @@ int main(){
             lst = addEnd(lst,i,j,0);      // list,row,col,value
         }
     }
+    printf("To reveal : r/\n");
+    printf("To mark or unmark flag : m/\n");
     display(lst);
     printf("\n\n");
-    printf("Enter karo : ");
+    printf("Enter Action and Coordinates : ");
 
     // Taking first input
     int xx,yy;
-    scanf("%d %d",&xx,&yy); 
+    char Input[100];
+    char* a;
+    fgets(Input,100,stdin);
+    a = strtok(Input, " ");
+    xx = atoi(strtok(NULL, " ")); 
+    yy = atoi(strtok(NULL, " ")); 
     NODE* wee;
 
     // Placing Mines
@@ -195,37 +208,63 @@ int main(){
         }
     }
     lst = AssignNum(lst);
-
+    
     // checking for grouping
-    lst = Group(lst,xx,yy);
-    printf("\033[2J"); // ANSI escape code to clear the screen
-    printf("\033[H");  // ANSI escape code to move the cursor to the top left corner
+    if(!strcmp(a,"r/")){
+        lst = Group(lst,xx,yy);
+    }
+    else if(!strcmp(a,"m/")){
+        NODE* temp = traverse_list(lst,xx,yy);
+        temp->pressed = 2;
+    }
+    else{
+        printf("Invalid action");
+    }
+    printf("\033[2J"); 
+    printf("\033[H"); 
     display(lst);
 
     t = 1;
     while(t!=0){
         printf("\n\n");
-        printf("Enter karo : ");
-        scanf("%d %d",&xx,&yy);
-        wee = traverse_list(lst,xx,yy);
-        if(wee == NULL){
-            printf("**** galat input ****");
-            continue;
+        printf("Enter Action and Coordinates : ");
+        fgets(Input,100,stdin);
+        a = strtok(Input, " ");
+        xx = atoi(strtok(NULL, " ")); 
+        yy = atoi(strtok(NULL, " "));
+        if(!strcmp(a,"r/")){
+            wee = traverse_list(lst,xx,yy);
+            if(wee == NULL){
+                printf("\n**** invalid input ****");
+                continue;
+            }
+            else if(wee->num == 9){
+                t = 0;
+                printf("\n**** BOMB!!! ****");
+                continue;
+            }
+            else if(wee->pressed == 1){
+                printf("\n**** invalid input ****");
+                continue;
+            }
+            else{
+                lst = Group(lst,xx,yy);
+            }
         }
-        else if(wee->num == 9){
-            t = 0;
-            printf("**** BOMB!!! ****");
-            continue;
-        }
-        else if(wee->pressed == 1){
-            printf("**** galat input ****");
-            continue;
+        else if(!strcmp(a,"m/")){
+            NODE* temp = traverse_list(lst,xx,yy);
+            if(temp->pressed == 0){
+                temp->pressed = 2;
+            }
+            else{
+                temp->pressed = 0;
+            }
         }
         else{
-            lst = Group(lst,xx,yy);
+            printf("\nInvalid action");
         }
-        printf("\033[2J"); // ANSI escape code to clear the screen
-        printf("\033[H");  // ANSI escape code to move the cursor to the top left corner
+        printf("\033[2J");
+        printf("\033[H"); 
         display(lst);
     }
 }
