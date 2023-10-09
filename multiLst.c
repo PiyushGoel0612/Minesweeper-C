@@ -114,7 +114,8 @@ LIST* AssignNum(LIST* lst){
     return lst;
 }
 
-void display(LIST* lst){
+int display(LIST* lst){
+    int count = 0;
     LIST* temp1 = lst;
     printf("\n");
     int x = 0;
@@ -124,14 +125,14 @@ void display(LIST* lst){
         while(node!= NULL){
             if(node->pressed == 1){
                 printf("[%d] ", node->num);
+                count+=1;
             }
             else if(node->pressed == 2){
-                printf("[?] ");
+                printf("[*] ");
             }
             else{
                 printf("[ ] ");
             }
-            // printf("[%d] ", node->pressed);
             node = node->next;
         }
         printf("\n");
@@ -143,7 +144,12 @@ void display(LIST* lst){
     for(int i = 0; i < x; i++){
         printf(" %d  ", i);
     }
-    return;
+    if(count == 54){
+        return 1;
+    }
+    else{
+        return 0;
+    }
 }
 
 LIST* Group(LIST* lst,int x,int y){
@@ -222,6 +228,8 @@ int main(){
     }
     printf("\033[2J"); 
     printf("\033[H"); 
+    printf("To reveal : r/\n");
+    printf("To mark or unmark flag : m/\n");
     display(lst);
 
     t = 1;
@@ -265,6 +273,12 @@ int main(){
         }
         printf("\033[2J");
         printf("\033[H"); 
-        display(lst);
+        printf("To reveal : r/\n");
+        printf("To mark or unmark flag : m/\n");
+        int x = display(lst);
+        if(x == 1){
+            t = 0;
+            printf("\n**** Thy has 1 ****\n");
+        }
     }
 }
